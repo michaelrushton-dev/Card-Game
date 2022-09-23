@@ -6,6 +6,8 @@ function App() {
   const [playerScore, setPlayerScore] = useState([]);
   const [dealerScore, setDealerScore] = useState([]);
   const [deckId, setDeckId] = useState([]);
+  const [reset, setReset] = useState(false);
+  const [winner, setWinner] = useState('');
 
   // initial loading of cards and deck id
   useEffect(() => {
@@ -27,7 +29,7 @@ function App() {
       //   console.log(res);
     }
     initialLoad();
-  }, []);
+  }, [reset]);
 
   //draws new card for player
   async function newCard() {
@@ -40,32 +42,88 @@ function App() {
       { image: res.cards[0].image, value: res.cards[0].value },
     ]);
   }
+  //draws new card for dealer
+  async function newDealerCard() {
+    const response = await fetch(
+      `https://www.deckofcardsapi.com/api/deck/${deckId}/draw/?count=1`
+    );
+    const res = await response.json();
+    setDealerScore((prev) => [
+      ...prev,
+      { image: res.cards[0].image, value: res.cards[0].value },
+    ]);
+  }
 
   const player = useScore(playerScore);
   const dealer = useScore(dealerScore);
   console.log('player', player, 'dealer', dealer);
 
+  function compareScores(dealerscore, playerscore) {
+    dealerscore > 21
+      ? setWinner('Dealer bust, you win!')
+      : dealerscore > playerscore
+      ? setWinner('Dealer wins!')
+      : setWinner('You win!');
+  }
+
+  function dealerTurn(dealerscore, playerscore) {
+    dealer < 17 && newDealerCard();
+    compareScores(dealerscore, playerscore);
+  }
+
+  //   function dealerTurn(dealerscore, playerscore) {
+  //     do {
+  //       setDealersTotal(dealerscore);
+  //       newDealerCard();
+  //       console.log(dealerTurn);
+  //     } while (dealersTotal < 17);
+  //     compareScores(dealerscore, playerscore);
+  //   }
+
   return (
     <div className='App'>
-      <button
-        onClick={() => {
-          newCard();
-        }}
-      >
-        Draw Card
-      </button>
+      <h1>{winner}</h1>
       <h1>
-        Dealer Score
+        Dealer Score {dealer}
         {dealerScore.map((player) => {
           return <img src={`${player.image}`} alt={player.value}></img>;
         })}
       </h1>
       <h1>
-        Player Score
+        Player Score {player}
         {playerScore.map((player) => {
           return <img src={`${player.image}`} alt={player.value}></img>;
         })}
       </h1>
+      {player <= 21 ? (
+        <div>
+          <button
+            onClick={() => {
+              newCard();
+            }}
+          >
+            Draw Card
+          </button>
+          <button
+            onClick={() => {
+              dealerTurn(dealer, player);
+            }}
+          >
+            Stick
+          </button>
+        </div>
+      ) : (
+        <div>
+          <h1>Bust!</h1>
+          <button
+            onClick={() => {
+              setReset(!reset);
+            }}
+          >
+            Play Again
+          </button>
+        </div>
+      )}
     </div>
   );
 }
