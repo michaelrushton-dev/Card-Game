@@ -8,6 +8,7 @@ function App() {
   const [deckId, setDeckId] = useState([]);
   const [reset, setReset] = useState(false);
   const [winner, setWinner] = useState('');
+  const [gameOver, setGameOver] = useState(false);
 
   // initial loading of cards and deck id
   useEffect(() => {
@@ -64,11 +65,18 @@ function App() {
       : dealerscore > playerscore
       ? setWinner('Dealer wins!')
       : setWinner('You win!');
+    setGameOver(true);
   }
 
-  function dealerTurn(dealerscore, playerscore) {
+  function dealerTurn() {
     dealer < 17 && newDealerCard();
-    compareScores(dealerscore, playerscore);
+    dealer > 16 && compareScores(dealer, player);
+  }
+
+  function reseter() {
+    setWinner('');
+    setGameOver(false);
+    setReset(!reset);
   }
 
   //   function dealerTurn(dealerscore, playerscore) {
@@ -106,11 +114,20 @@ function App() {
           </button>
           <button
             onClick={() => {
-              dealerTurn(dealer, player);
+              dealerTurn();
             }}
           >
             Stick
           </button>
+          {gameOver ? (
+            <button
+              onClick={() => {
+                reseter();
+              }}
+            >
+              Play Again
+            </button>
+          ) : null}
         </div>
       ) : (
         <div>
